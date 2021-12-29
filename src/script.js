@@ -2,6 +2,7 @@ import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as dat from "dat.gui";
+import { Sphere } from "three";
 
 // Loading
 const textureLoader = new THREE.TextureLoader();
@@ -18,26 +19,26 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 // Objects
-const geometry = new THREE.SphereBufferGeometry(0.7, 64, 64);
+const geometry = new THREE.SphereGeometry(1, 32, 16);
 
 // Materials
 const material = new THREE.MeshStandardMaterial();
-material.metalness = 0.7;
+material.metalness = 0.9;
 material.roughness = 0.1;
 material.normalMap = normalTexture;
-material.color = new THREE.Color(0x000111);
+material.color = new THREE.Color(0x151417);
 
 // material.flatShading = true;
 // material.wireframe = true;
 
 // Mesh
-const sphere = new THREE.Mesh(geometry, material);
-scene.add(sphere);
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
 
 // Lights
 const pointLight = new THREE.PointLight(0xffffff, 2);
-pointLight.position.x = 1;
-pointLight.position.y = 3;
+pointLight.position.x = 0;
+pointLight.position.y = 1;
 pointLight.position.z = 4;
 scene.add(pointLight);
 
@@ -54,12 +55,20 @@ light1.add(pointLight2.position, "y").min(-3).max(3).step(0.01);
 light1.add(pointLight2.position, "z").min(-3).max(3).step(0.01);
 light1.add(pointLight2, "intensity").min(0).max(10).step(0.01);
 
-const pointLightHelper = new THREE.PointLightHelper(pointLight2, 1);
-scene.add(pointLightHelper);
+const lightColor = {
+  color: 0xff0000,
+};
+
+light1.addColor(lightColor, "color").onChange(() => {
+  pointLight2.color.set(lightColor.color);
+});
+
+// const pointLightHelper = new THREE.PointLightHelper(pointLight2, 1);
+// scene.add(pointLightHelper);
 
 // Light 3
-const pointLight3 = new THREE.PointLight(0xff0000, 2);
-pointLight3.position.set(-1.88, 1, -1.65);
+const pointLight3 = new THREE.PointLight(0x10b6f0, 2);
+pointLight3.position.set(1.01, -0.15, 0.57);
 pointLight3.intensity = 10;
 scene.add(pointLight3);
 
@@ -70,8 +79,16 @@ light2.add(pointLight3.position, "y").min(-3).max(3).step(0.01);
 light2.add(pointLight3.position, "z").min(-3).max(3).step(0.01);
 light2.add(pointLight3, "intensity").min(0).max(10).step(0.01);
 
-const pointLightHelper2 = new THREE.PointLightHelper(pointLight3, 1);
-scene.add(pointLightHelper2);
+const light2Color = {
+  color: 0x10b6f0,
+};
+
+light2.addColor(light2Color, "color").onChange(() => {
+  pointLight3.color.set(light2Color.color);
+});
+
+// const pointLightHelper2 = new THREE.PointLightHelper(pointLight3, 1);
+// scene.add(pointLightHelper2);
 
 /**
  * Sizes
@@ -127,14 +144,44 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 /**
  * Animate
  */
+document.addEventListener("mousemove", onMouseMove);
+
+let mouseX = 0;
+let mouseY = 0;
+
+let targetX = 0;
+let targetY = 0;
+
+const windowHalfX = window.innerWidth / 2;
+console.log(windowHalfX);
+const windowHalfY = window.innerHeight / 2;
+
+function onMouseMove(e) {
+  // where pointer is on x-axis (e.clientX)
+  mouseX = e.clientX - windowHalfX;
+  mouseY = e.clientY - windowHalfY;
+}
+
+window.addEventListener("scroll", updateSphere);
+
+function updateSphere(e) {
+  mesh.position.y = window.scrollY * 0.001;
+}
 
 const clock = new THREE.Clock();
 
 const tick = () => {
+  targetX = mouseX * 0.001;
+  targetY = mouseY * 0.001;
+
   const elapsedTime = clock.getElapsedTime();
 
   // Update objects
-  sphere.rotation.y = 0.5 * elapsedTime;
+  mesh.rotation.y = 0.5 * elapsedTime;
+
+  mesh.rotation.x += 0.5 * (targetY - mesh.rotation.x);
+  mesh.rotation.y += 0.05 * (targetX - mesh.rotation.y);
+  mesh.position.z += -0.5 * (targetY - mesh.rotation.x);
 
   // Update Orbital Controls
   // controls.update()
